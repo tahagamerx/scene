@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Scenexe Style Game</title>
+<title>Scenexe Style Pro</title>
 <style>
-body{margin:0;background:#000;overflow:hidden;color:#fff;font-family:sans-serif}
-canvas{display:block}
-#ui{position:absolute;top:10px;left:10px}
+body { margin:0; background:#000; overflow:hidden; color:#fff; font-family:sans-serif; }
+canvas { display:block; }
+#hud { position:absolute; top:10px; left:10px; font-size:14px; }
 </style>
 </head>
 <body>
 
-<div id="ui">
+<div id="hud">
 LEVEL: <span id="lvl">1</span> |
 SCORE: <span id="score">0</span> |
 HP: <span id="hp">100</span>
@@ -20,87 +20,90 @@ HP: <span id="hp">100</span>
 <canvas id="c"></canvas>
 
 <script>
-const c=document.getElementById("c");
-const ctx=c.getContext("2d");
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
 
-let W=innerWidth,H=innerHeight;
-c.width=W;c.height=H;
+let W = innerWidth, H = innerHeight;
+c.width = W; c.height = H;
 
-let keys={},bullets=[],shapes=[],bots=[],portals=[];
+let keys = {}, bullets = [], shapes = [], bots = [], portals = [];
 
-let p={
+let p = {
  x:0,y:0,vx:0,vy:0,a:0,
  hp:100,maxHP:100,
  lvl:1,xp:0,next:100,score:0,
  reload:0
 };
 
-// controls
+// CONTROLS
 onkeydown=e=>keys[e.key]=1;
 onkeyup=e=>keys[e.key]=0;
 onmousemove=e=>p.a=Math.atan2(e.clientY-H/2,e.clientX-W/2);
 onmousedown=()=>p.shoot=1;
 onmouseup=()=>p.shoot=0;
 
-// spawn
+// SPAWN
 function spawnShape(){
  shapes.push({
-  x:(Math.random()-0.5)*4000,
-  y:(Math.random()-0.5)*4000,
-  hp:50,
-  size:20
+  x:(Math.random()-0.5)*5000,
+  y:(Math.random()-0.5)*5000,
+  hp:60,
+  size:22
  });
 }
+
 function spawnBot(){
  bots.push({
-  x:(Math.random()-0.5)*3000,
-  y:(Math.random()-0.5)*3000,
+  x:(Math.random()-0.5)*4000,
+  y:(Math.random()-0.5)*4000,
   hp:100,
   a:0,
   cd:0
  });
 }
 
-for(let i=0;i<120;i++)spawnShape();
-for(let i=0;i<6;i++)spawnBot();
-portals.push({x:1500,y:1500});
+for(let i=0;i<180;i++) spawnShape();
+for(let i=0;i<8;i++) spawnBot();
+portals.push({x:2000,y:2000});
 
-// update
+// UPDATE
 function update(){
 
 // movement
 let sp=0.6;
-if(keys["w"])p.vy-=sp;
-if(keys["s"])p.vy+=sp;
-if(keys["a"])p.vx-=sp;
-if(keys["d"])p.vx+=sp;
+if(keys["w"]) p.vy-=sp;
+if(keys["s"]) p.vy+=sp;
+if(keys["a"]) p.vx-=sp;
+if(keys["d"]) p.vx+=sp;
 
-p.vx*=0.9;p.vy*=0.9;
-p.x+=p.vx;p.y+=p.vy;
+p.vx*=0.9; p.vy*=0.9;
+p.x+=p.vx; p.y+=p.vy;
 
 // regen
-if(p.hp<p.maxHP)p.hp+=0.05;
+if(p.hp < p.maxHP){
+ p.hp += 0.05;
+}
 
-// shoot
+// shooting
 if(p.shoot && p.reload<=0){
  bullets.push({x:p.x,y:p.y,a:p.a,life:80,dmg:20,own:"p"});
- p.reload=20;
+ p.reload = 20;
 }
-if(p.reload>0)p.reload--;
+if(p.reload>0) p.reload--;
 
 // bullets
 bullets.forEach((b,i)=>{
- b.x+=Math.cos(b.a)*12;
- b.y+=Math.sin(b.a)*12;
+ b.x += Math.cos(b.a)*12;
+ b.y += Math.sin(b.a)*12;
 
  // hit shapes
  shapes.forEach((s,si)=>{
   if(Math.hypot(b.x-s.x,b.y-s.y)<s.size){
-   s.hp-=b.dmg;
+   s.hp -= b.dmg;
    bullets.splice(i,1);
    if(s.hp<=0){
-    p.score+=10;
-    p.xp+=20;
+    p.score += 10;
+    p.xp += 20;
     shapes.splice(si,1);
     spawnShape();
    }
@@ -109,49 +112,49 @@ bullets.forEach((b,i)=>{
 
  // hit player
  if(b.own==="bot"){
-  if(Math.hypot(b.x-p.x,b.y-p.y)<20){
-   p.hp-=5;
+  if(Math.hypot(b.x-p.x,b.y-p.y)<24){
+   p.hp -= 6;
    bullets.splice(i,1);
   }
  }
 
- if(b.life--<=0)bullets.splice(i,1);
+ if(b.life--<=0) bullets.splice(i,1);
 });
 
-// level
+// LEVEL UP
 if(p.xp>=p.next){
  p.lvl++;
  p.xp=0;
  p.next*=1.3;
 }
 
-// bots AI
+// BOTS AI
 bots.forEach(bot=>{
  let dx=p.x-bot.x;
  let dy=p.y-bot.y;
  bot.a=Math.atan2(dy,dx);
 
- bot.x+=Math.cos(bot.a)*1.2;
- bot.y+=Math.sin(bot.a)*1.2;
+ bot.x += Math.cos(bot.a)*1.3;
+ bot.y += Math.sin(bot.a)*1.3;
 
  if(bot.cd<=0){
-  bullets.push({x:bot.x,y:bot.y,a:bot.a,life:80,dmg:10,own:"bot"});
-  bot.cd=60;
+  bullets.push({x:bot.x,y:bot.y,a:bot.a,life:80,dmg:12,own:"bot"});
+  bot.cd=55;
  }
  bot.cd--;
 });
 
-// portal
+// PORTAL
 portals.forEach(pt=>{
- if(Math.hypot(p.x-pt.x,p.y-pt.y)<80){
-  p.x=(Math.random()-0.5)*3000;
-  p.y=(Math.random()-0.5)*3000;
+ if(Math.hypot(p.x-pt.x,p.y-pt.y)<90){
+  p.x=(Math.random()-0.5)*4000;
+  p.y=(Math.random()-0.5)*4000;
  }
 });
 
-// death
+// DEATH
 if(p.hp<=0){
- alert("You Died");
+ alert("You Died!");
  location.reload();
 }
 
@@ -161,9 +164,9 @@ score.innerText=p.score;
 hp.innerText=Math.floor(p.hp);
 }
 
-// draw
+// DRAW
 function draw(){
-c.width=W;c.height=H;
+c.width=W; c.height=H;
 ctx.fillStyle="#000";
 ctx.fillRect(0,0,W,H);
 
@@ -173,13 +176,13 @@ ctx.translate(-p.x,-p.y);
 
 // grid
 ctx.strokeStyle="#111";
-for(let i=-2000;i<2000;i+=120){
- ctx.beginPath();ctx.moveTo(i,-2000);ctx.lineTo(i,2000);ctx.stroke();
- ctx.beginPath();ctx.moveTo(-2000,i);ctx.lineTo(2000,i);ctx.stroke();
+for(let i=-3000;i<3000;i+=140){
+ ctx.beginPath(); ctx.moveTo(i,-3000); ctx.lineTo(i,3000); ctx.stroke();
+ ctx.beginPath(); ctx.moveTo(-3000,i); ctx.lineTo(3000,i); ctx.stroke();
 }
 
 // shapes
-ctx.fillStyle="yellow";
+ctx.fillStyle="#ffe869";
 shapes.forEach(s=>{
  ctx.beginPath();
  ctx.arc(s.x,s.y,s.size,0,7);
@@ -187,15 +190,15 @@ shapes.forEach(s=>{
 });
 
 // bots
-ctx.fillStyle="red";
+ctx.fillStyle="#ff3b3b";
 bots.forEach(b=>{
  ctx.beginPath();
- ctx.arc(b.x,b.y,22,0,7);
+ ctx.arc(b.x,b.y,26,0,7);
  ctx.fill();
 });
 
 // bullets
-ctx.fillStyle="white";
+ctx.fillStyle="#fff";
 bullets.forEach(b=>{
  ctx.beginPath();
  ctx.arc(b.x,b.y,5,0,7);
@@ -208,10 +211,10 @@ ctx.translate(p.x,p.y);
 ctx.rotate(p.a);
 
 ctx.fillStyle="#444";
-ctx.fillRect(0,-8,40,16);
+ctx.fillRect(0,-10,50,20);
 
 ctx.beginPath();
-ctx.arc(0,0,20,0,7);
+ctx.arc(0,0,24,0,7);
 ctx.fillStyle="#00adef";
 ctx.fill();
 
@@ -220,7 +223,7 @@ ctx.restore();
 ctx.restore();
 }
 
-// loop
+// LOOP
 function loop(){
 update();
 draw();
