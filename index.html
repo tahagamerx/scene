@@ -2,96 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scenexe2.io | Final Master Build</title>
+    <title>Scenexe2 | Final Playable Build</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; user-select: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap');
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Ubuntu', sans-serif; color: white; user-select: none; }
         canvas { display: block; }
-        
-        /* Scenexe2 Style UI Panels */
-        .panel { position: absolute; bottom: 20px; width: 230px; display: none; z-index: 100; }
-        #left-panel { left: 20px; }
-        #right-panel { right: 20px; }
-        
-        .stat-bar { background: rgba(10, 10, 10, 0.9); border: 1px solid #333; margin: 4px 0; padding: 6px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-        .stat-bar:hover { border-color: #00adef; background: #111; }
-        .stat-name { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
-        .stat-val { color: #00adef; font-weight: bold; font-family: monospace; }
-        .key-hint { color: #444; font-size: 9px; margin-right: 5px; }
 
-        /* XP & Leveling */
-        #xp-wrapper { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 450px; text-align: center; }
-        .xp-container { width: 100%; height: 6px; background: #111; border: 1px solid #222; border-radius: 10px; overflow: hidden; position: relative; }
-        #xp-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00adef, #005f7a); box-shadow: 0 0 10px rgba(0, 173, 239, 0.5); transition: 0.3s; }
-        #lvl-info { margin-top: 8px; font-size: 12px; letter-spacing: 2px; font-family: monospace; color: #eee; }
+        /* Scenexe2 Authentic UI (Referencing 4.PNG & asd3.PNG) */
+        .ui-panel { position: absolute; bottom: 25px; width: 280px; z-index: 100; pointer-events: none; }
+        #left-ui { left: 25px; }
+        #right-ui { right: 25px; }
 
-        /* HUD Labels */
-        #hud { position: absolute; top: 20px; left: 20px; font-family: monospace; color: #444; font-size: 11px; line-height: 1.6; }
-        .active { color: #00adef !important; text-shadow: 0 0 5px #00adef; }
-        
-        /* Start Menu */
-        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        .logo { font-size: 50px; letter-spacing: 15px; margin-bottom: 50px; font-weight: 100; }
-        .logo b { color: #00adef; font-weight: 900; }
-        .btn { border: 1px solid #00adef; color: #00adef; padding: 12px 50px; background: none; cursor: pointer; font-size: 14px; letter-spacing: 4px; transition: 0.4s; }
-        .btn:hover { background: #00adef; color: white; box-shadow: 0 0 40px #00adef; }
+        .stat-bar { 
+            background: rgba(0, 0, 0, 0.95); border: 2.5px solid #333; border-radius: 35px;
+            margin: 8px 0; padding: 10px 20px; display: flex; justify-content: space-between;
+            align-items: center; cursor: pointer; pointer-events: auto; transition: 0.15s;
+        }
+        .stat-bar:hover { border-color: #00adef; background: #080808; transform: translateX(5px); }
+        #right-ui .stat-bar:hover { transform: translateX(-5px); }
+
+        .stat-label { display: flex; align-items: center; gap: 12px; }
+        .stat-name { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+        .stat-key { color: #555; font-size: 12px; font-weight: 700; }
+        .stat-val { color: #00adef; font-weight: 900; font-size: 18px; font-family: monospace; }
+
+        /* Central HUD (Level, Score, XP) */
+        #central-hud { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+            width: 550px; text-align: center; pointer-events: none;
+        }
+        .name-tag { font-size: 28px; font-weight: 900; letter-spacing: 1px; margin-bottom: 2px; }
+        .sub-tag { font-size: 13px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+        .bar-wrap { width: 100%; height: 14px; background: #111; border: 2.5px solid #333; border-radius: 20px; overflow: hidden; }
+        #xp-fill { width: 0%; height: 100%; background: #00adef; box-shadow: 0 0 20px rgba(0, 173, 239, 0.7); transition: width 0.4s cubic-bezier(0.1, 0.7, 1.0, 0.1); }
+        .score-info { margin-top: 10px; font-size: 14px; font-weight: 700; color: #eee; }
+
+        /* Minimap & HUD Info */
+        #minimap { position: absolute; top: 20px; left: 20px; width: 150px; height: 150px; background: rgba(20, 20, 20, 0.8); border: 2px solid #333; border-radius: 5px; }
+        #top-right { position: absolute; top: 20px; right: 25px; text-align: right; font-family: monospace; font-size: 13px; color: #555; }
+        .active-mod { color: #00adef; font-weight: bold; text-shadow: 0 0 8px #00adef; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">
-        <div class="logo">SCENEXE<b>2</b></div>
-        <button class="btn" onclick="initGame()">SPAWN</button>
+    <div id="top-right">
+        AUTO-FIRE [E]: <span id="e-status">OFF</span> | 
+        PASSIVE [V]: <span id="v-status">OFF</span> | 
+        SPIN [C]: <span id="c-status">OFF</span>
     </div>
 
-    <div id="hud">
-        DIMENSION: THE VOID<br>
-        AUTO-FIRE [E]: <span id="h-e">OFF</span><br>
-        PASSIVE [V]: <span id="h-v">OFF</span><br>
-        AUTO-SPIN [C]: <span id="h-c">OFF</span>
+    <div id="left-ui" class="ui-panel">
+        <div class="stat-bar" onclick="lvlUp('reload')"><div class="stat-label"><span class="stat-key">[1]</span><span class="stat-name">Reload</span></div><span class="stat-val" id="val-reload">0</span></div>
+        <div class="stat-bar" onclick="lvlUp('damage')"><div class="stat-label"><span class="stat-key">[2]</span><span class="stat-name">Damage</span></div><span class="stat-val" id="val-damage">0</span></div>
+        <div class="stat-bar" onclick="lvlUp('bSpeed')"><div class="stat-label"><span class="stat-key">[3]</span><span class="stat-name">Bullet Speed</span></div><span class="stat-val" id="val-bSpeed">0</span></div>
+        <div class="stat-bar" onclick="lvlUp('bHealth')"><div class="stat-label"><span class="stat-key">[4]</span><span class="stat-name">Bullet Health</span></div><span class="stat-val" id="val-bHealth">0</span></div>
     </div>
 
-    <div id="left-panel" class="panel">
-        <div class="stat-bar" onclick="upStat('reload')"><span><span class="key-hint">1</span><span class="stat-name">Reload</span></span><span class="stat-val" id="s-reload">0</span></div>
-        <div class="stat-bar" onclick="upStat('damage')"><span><span class="key-hint">2</span><span class="stat-name">Damage</span></span><span class="stat-val" id="s-damage">0</span></div>
-        <div class="stat-bar" onclick="upStat('bSpeed')"><span><span class="key-hint">3</span><span class="stat-name">B. Speed</span></span><span class="stat-val" id="s-bSpeed">0</span></div>
-        <div class="stat-bar" onclick="upStat('bHealth')"><span><span class="key-hint">4</span><span class="stat-name">B. Health</span></span><span class="stat-val" id="s-bHealth">0</span></div>
+    <div id="right-ui" class="ui-panel">
+        <div class="stat-bar" onclick="lvlUp('maxHP')"><span class="stat-val" id="val-maxHP">0</span><div class="stat-label"><span class="stat-name">Max Health</span><span class="stat-key">[5]</span></div></div>
+        <div class="stat-bar" onclick="lvlUp('regen')"><span class="stat-val" id="val-regen">0</span><div class="stat-label"><span class="stat-name">Regeneration</span><span class="stat-key">[6]</span></div></div>
+        <div class="stat-bar" onclick="lvlUp('bodyDmg')"><span class="stat-val" id="val-bodyDmg">0</span><div class="stat-label"><span class="stat-name">Body Damage</span><span class="stat-key">[7]</span></div></div>
+        <div class="stat-bar" onclick="lvlUp('speed')"><span class="stat-val" id="val-speed">0</span><div class="stat-label"><span class="stat-name">Movement</span><span class="stat-key">[8]</span></div></div>
     </div>
 
-    <div id="right-panel" class="panel">
-        <div class="stat-bar" onclick="upStat('maxHP')"><span class="stat-val" id="s-maxHP">0</span><span><span class="stat-name">Max Health</span><span class="key-hint">5</span></span></div>
-        <div class="stat-bar" onclick="upStat('regen')"><span class="stat-val" id="s-regen">0</span><span><span class="stat-name">Regen</span><span class="key-hint">6</span></span></div>
-        <div class="stat-bar" onclick="upStat('bodyDmg')"><span class="stat-val" id="s-bodyDmg">0</span><span><span class="stat-name">Body Dmg</span><span class="key-hint">7</span></span></div>
-        <div class="stat-bar" onclick="upStat('speed')"><span class="stat-val" id="s-speed">0</span><span><span class="stat-name">Speed</span><span class="key-hint">8</span></span></div>
+    <div id="central-hud">
+        <div class="name-tag">Unnamed</div>
+        <div class="sub-tag">Level <span id="ui-level">1</span> <span id="ui-class">Mono-Sentry</span></div>
+        <div class="bar-wrap"><div id="xp-fill"></div></div>
+        <div class="score-info">SCORE: <span id="ui-score">0</span> | POINTS: <span id="ui-pts">0</span></div>
     </div>
 
-    <div id="xp-wrapper">
-        <div class="xp-container"><div id="xp-bar"></div></div>
-        <div id="lvl-info">LEVEL <span id="ui-lvl">1</span> | <span id="ui-class">NODE</span> | POINTS: <span id="ui-pts">0</span></div>
-    </div>
-
-    <canvas id="canvas"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        let gameOn = false, camZoom = 1, arena = 8000;
-        let shapes = [], bullets = [], portals = [], keys = {};
+        let shapes = [], bullets = [], portals = [], particles = [], keys = {}, camScale = 1;
 
+        // Realistic Scenexe2 Player Object
         let p = {
-            x: 0, y: 0, vx: 0, vy: 0, angle: 0, 
-            lvl: 1, xp: 0, next: 100, pts: 0,
+            x: 0, y: 0, vx: 0, vy: 0, angle: 0,
+            lvl: 1, xp: 0, next: 100, score: 0, pts: 0,
+            hp: 100, maxHP: 100,
             stats: { reload:0, damage:0, bSpeed:0, bHealth:0, maxHP:0, regen:0, bodyDmg:0, speed:0 },
-            barrels: 1, type: 'Node', color: '#00adef',
-            autoF: false, passive: false, autoS: false,
-            hp: 100, maxHP: 100, size: 24
+            barrels: 1, bWidth: 28, bLen: 55, type: 'Mono-Sentry', 
+            autoF: false, passive: false, autoS: false, cooldown: 0
         };
 
-        function initGame() {
-            document.getElementById('overlay').style.display = 'none';
-            document.querySelectorAll('.panel').forEach(el => el.style.display = 'block');
-            gameOn = true;
-            for(let i=0; i<400; i++) spawnShape();
-            portals.push({x: 1500, y: 1500, c: '#9c27b0', dim: 'Abyss'}, {x: -1500, y: -1500, c: '#4caf50', dim: 'Sanctuary'});
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<350; i++) spawnShape();
+            portals.push({x: 3000, y: 3000, c: '#9c27b0', label: 'The Void'});
             requestAnimationFrame(loop);
         }
 
@@ -99,149 +100,154 @@
             let r = Math.random();
             let sides = (r > 0.98) ? 6 : (r > 0.9) ? 5 : (r > 0.7) ? 4 : 3;
             shapes.push({
-                x: (Math.random()-0.5)*arena, y: (Math.random()-0.5)*arena,
-                size: 20 + (sides * 5), sides: sides, 
-                hp: sides * 40, xp: sides * 50,
+                x: (Math.random()-0.5)*12000, y: (Math.random()-0.5)*12000,
+                size: 25 + (sides*6), sides: sides, 
+                hp: sides*60, maxHP: sides*60, xp: sides*80,
                 color: (sides==6?'#ff00ff':sides==5?'#768dfc':sides==4?'#ff8a8a':'#ffe869'),
-                angle: Math.random()*7, spin: 0.015
+                angle: Math.random()*7, spin: (Math.random()-0.5)*0.04
             });
+        }
+
+        function lvlUp(s) {
+            if(p.pts > 0 && p.stats[s] < 15) {
+                p.stats[s]++; p.pts--;
+                document.getElementById(`val-${s}`).innerText = p.stats[s];
+                document.getElementById('ui-pts').innerText = p.pts;
+                if(s === 'maxHP') { p.maxHP += 60; p.hp += 60; }
+            }
         }
 
         window.onkeydown = e => {
             let k = e.key.toLowerCase(); keys[k] = true;
-            if(k === 'e') { p.autoF = !p.autoF; updateHUD(); }
-            if(k === 'v') { p.passive = !p.passive; updateHUD(); }
-            if(k === 'c') { p.autoS = !p.autoS; updateHUD(); }
-            const m = {'1':'reload','2':'damage','3':'bSpeed','4':'bHealth','5':'maxHP','6':'regen','7':'bodyDmg','8':'speed'};
-            if(m[k]) upStat(m[k]);
+            if(k === 'e') { p.autoF = !p.autoF; document.getElementById('e-status').className = p.autoF ? 'active-mod' : ''; document.getElementById('e-status').innerText = p.autoF ? 'ON' : 'OFF'; }
+            if(k === 'v') { p.passive = !p.passive; document.getElementById('v-status').className = p.passive ? 'active-mod' : ''; document.getElementById('v-status').innerText = p.passive ? 'ON' : 'OFF'; }
+            if(k === 'c') { p.autoS = !p.autoS; document.getElementById('c-status').className = p.autoS ? 'active-mod' : ''; document.getElementById('c-status').innerText = p.autoS ? 'ON' : 'OFF'; }
+            const map = {'1':'reload','2':'damage','3':'bSpeed','4':'bHealth','5':'maxHP','6':'regen','7':'bodyDmg','8':'speed'};
+            if(map[e.key]) lvlUp(map[e.key]);
         };
         window.onkeyup = e => keys[e.key.toLowerCase()] = false;
         window.onmousemove = e => p.angle = Math.atan2(e.clientY - canvas.height/2, e.clientX - canvas.width/2);
-        window.onmousedown = () => window.firing = true;
-        window.onmouseup = () => window.firing = false;
-
-        function updateHUD() {
-            document.getElementById('h-e').className = p.autoF ? 'active' : ''; document.getElementById('h-e').innerText = p.autoF ? 'ON' : 'OFF';
-            document.getElementById('h-v').className = p.passive ? 'active' : ''; document.getElementById('h-v').innerText = p.passive ? 'ON' : 'OFF';
-            document.getElementById('h-c').className = p.autoS ? 'active' : ''; document.getElementById('h-c').innerText = p.autoS ? 'ON' : 'OFF';
-        }
-
-        function upStat(s) {
-            if(p.pts > 0 && p.stats[s] < 15) {
-                p.stats[s]++; p.pts--;
-                document.getElementById(`s-${s}`).innerText = p.stats[s];
-                document.getElementById('ui-pts').innerText = p.pts;
-                if(s==='maxHP') { p.maxHP += 50; p.hp += 50; }
-            }
-        }
+        window.onmousedown = () => window.isFiring = true;
+        window.onmouseup = () => window.isFiring = false;
 
         function update() {
-            if(!gameOn) return;
-            let move = 0.6 + (p.stats.speed * 0.08);
-            if(keys['w']) p.vy -= move; if(keys['s']) p.vy += move;
-            if(keys['a']) p.vx -= move; if(keys['d']) p.vx += move;
+            // Smooth Physics & Recoil
+            let acc = 0.65 + (p.stats.speed * 0.12);
+            if(keys['w']) p.vy -= acc; if(keys['s']) p.vy += acc;
+            if(keys['a']) p.vx -= acc; if(keys['d']) p.vx += acc;
             p.vx *= 0.92; p.vy *= 0.92; p.x += p.vx; p.y += p.vy;
 
-            if(p.autoS) p.angle += 0.04;
+            if(p.autoS) p.angle += 0.05;
 
-            // FOV Expansion Logic
-            let targetZoom = 0.8 / (1 + (p.lvl * 0.012));
-            camZoom += (targetZoom - camZoom) * 0.05;
+            // FOV Expansion (Scenexe2 Style)
+            let targetZoom = 0.85 / (1 + (p.lvl * 0.018));
+            if(p.type === 'Sniper') targetZoom *= 0.7; // Snipers see much further
+            camScale += (targetZoom - camScale) * 0.04;
 
-            // Combat
-            let rate = 20 - (p.stats.reload * 1.1);
-            if(!p.passive && (p.autoF || window.firing) && p.cooldown <= 0) {
+            // Combat & Evolution
+            if(!p.passive && (p.autoF || window.isFiring) && p.cooldown <= 0) {
                 for(let i=0; i<p.barrels; i++) {
                     bullets.push({
-                        x: p.x, y: p.y, 
-                        angle: p.angle + (i-(p.barrels-1)/2)*0.2, 
-                        life: 80 + (p.stats.bHealth*5)
+                        x: p.x, y: p.y, angle: p.angle + (i-(p.barrels-1)/2)*0.18, 
+                        life: 90 + (p.stats.bHealth*6), dmg: 30 + (p.stats.damage*12)
                     });
+                    // Scenexe2 Recoil
+                    p.vx -= Math.cos(p.angle) * 0.3; p.vy -= Math.sin(p.angle) * 0.3;
                 }
-                p.cooldown = rate;
+                p.cooldown = 24 - (p.stats.reload * 1.4);
             }
             if(p.cooldown > 0) p.cooldown--;
 
+            // Bullets & Shapes Interaction
             bullets.forEach((b, bi) => {
-                let s = 16 + (p.stats.bSpeed * 1.5);
-                b.x += Math.cos(b.angle)*s; b.y += Math.sin(b.angle)*s;
-                shapes.forEach((sh, si) => {
-                    if(Math.hypot(b.x-sh.x, b.y-sh.y) < sh.size) {
-                        sh.hp -= (25 + p.stats.damage*12); b.life = 0;
-                        if(sh.hp <= 0) {
-                            p.xp += sh.xp; shapes.splice(si, 1); spawnShape();
+                let bs = 16 + (p.stats.bSpeed * 1.8);
+                b.x += Math.cos(b.angle)*bs; b.y += Math.sin(b.angle)*bs;
+                shapes.forEach((s, si) => {
+                    if(Math.hypot(b.x-s.x, b.y-s.y) < s.size) {
+                        s.hp -= b.dmg; b.life = 0;
+                        if(s.hp <= 0) {
+                            p.score += s.xp * 2.5; p.xp += s.xp;
+                            shapes.splice(si, 1); spawnShape();
                             if(p.xp >= p.next) {
-                                p.lvl++; p.pts++; p.xp = 0; p.next *= 1.35;
-                                if(p.lvl==15) { p.barrels=2; p.type="Twin"; }
-                                if(p.lvl==30) { p.barrels=3; p.type="Triple"; }
-                                if(p.lvl==45) { p.barrels=5; p.type="Penta"; }
-                                document.getElementById('ui-lvl').innerText = p.lvl;
-                                document.getElementById('ui-class').innerText = p.type.toUpperCase();
-                                document.getElementById('ui-pts').innerText = p.pts;
+                                p.lvl++; p.pts++; p.xp = 0; p.next *= 1.38;
+                                // Evolution Tree
+                                if(p.lvl == 15) { p.barrels = 2; p.type = "Twin"; }
+                                if(p.lvl == 30) { p.barrels = 1; p.type = "Sniper"; p.bLen = 95; p.bWidth = 32; }
+                                if(p.lvl == 45) { p.barrels = 3; p.type = "Triple-Threat"; p.bLen = 65; }
                             }
                         }
                     }
                 });
                 if(b.life-- <= 0) bullets.splice(bi, 1);
             });
-            shapes.forEach(s => s.angle += s.spin);
-            
-            // Portal Teleport
-            portals.forEach(pt => {
-                if(Math.hypot(p.x - pt.x, p.y - pt.y) < 60) {
-                    p.x = -p.x * 0.8; p.y = -p.y * 0.8; // Dimension Leap
-                }
-            });
 
-            document.getElementById('xp-bar').style.width = (p.xp/p.next*100) + "%";
+            // UI Sync
+            document.getElementById('xp-fill').style.width = (p.xp/p.next*100) + "%";
+            document.getElementById('ui-level').innerText = p.lvl;
+            document.getElementById('ui-score').innerText = Math.floor(p.score);
+            document.getElementById('ui-class').innerText = p.type;
         }
 
         function loop() {
-            if(!gameOn) return;
+            update();
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             ctx.clearRect(0,0,canvas.width,canvas.height);
+            
             ctx.save();
-            ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(camZoom, camZoom); ctx.translate(-p.x, -p.y);
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.scale(camScale, camScale);
+            ctx.translate(-p.x, -p.y);
 
-            // Scenexe2 Grid
-            ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
-            for(let i=-arena; i<=arena; i+=150) {
-                ctx.beginPath(); ctx.moveTo(i, -arena); ctx.lineTo(i, arena); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(-arena, i); ctx.lineTo(arena, i); ctx.stroke();
+            // Scenexe2 Dark Grid
+            ctx.strokeStyle = '#121212'; ctx.lineWidth = 3;
+            const gridSize = 160;
+            for(let i = -6000; i <= 6000; i += gridSize) {
+                ctx.beginPath(); ctx.moveTo(i, -6000); ctx.lineTo(i, 6000); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-6000, i); ctx.lineTo(6000, i); ctx.stroke();
             }
 
-            // Portals (Wormholes)
+            // Dimensions Portals
             portals.forEach(pt => {
-                ctx.shadowBlur = 20; ctx.shadowColor = pt.c;
-                ctx.fillStyle = pt.c; ctx.beginPath(); ctx.arc(pt.x, pt.y, 70, 0, 7); ctx.fill();
+                ctx.shadowBlur = 40; ctx.shadowColor = pt.c;
+                ctx.fillStyle = pt.c; ctx.beginPath(); ctx.arc(pt.x, pt.y, 100, 0, 7); ctx.fill();
                 ctx.shadowBlur = 0;
             });
 
-            // Entities
+            // Shapes with Thick Outlines
             shapes.forEach(s => {
-                ctx.fillStyle = s.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
-                ctx.beginPath(); for(let i=0; i<s.sides; i++) ctx.lineTo(s.x+Math.cos(s.angle+i*Math.PI*2/s.sides)*s.size, s.y+Math.sin(s.angle+i*Math.PI*2/s.sides)*s.size);
+                ctx.fillStyle = s.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 7;
+                ctx.beginPath();
+                for(let i=0; i<s.sides; i++) {
+                    ctx.lineTo(s.x + Math.cos(s.angle + i*Math.PI*2/s.sides)*s.size, s.y + Math.sin(s.angle + i*Math.PI*2/s.sides)*s.size);
+                }
                 ctx.closePath(); ctx.fill(); ctx.stroke();
+                s.angle += s.spin;
             });
 
-            // Bullets
-            ctx.fillStyle = p.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
-            bullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, 7); ctx.fill(); ctx.stroke(); });
+            // High-Resolution Bullets
+            ctx.fillStyle = p.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+            bullets.forEach(b => {
+                ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, 7); ctx.fill(); ctx.stroke();
+            });
 
-            // Player Tank
+            // Master Tank Rendering
             ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle);
-            ctx.fillStyle = '#252525'; ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+            ctx.fillStyle = '#333'; ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
             for(let i=0; i<p.barrels; i++) {
-                ctx.save(); ctx.rotate((i-(p.barrels-1)/2)*0.2);
-                ctx.fillRect(0, -14, 55, 28); ctx.strokeRect(0, -14, 55, 28);
+                ctx.save(); ctx.rotate((i-(p.barrels-1)/2)*0.18);
+                ctx.fillRect(0, -p.bWidth/2, p.bLen, p.bWidth); 
+                ctx.strokeRect(0, -p.bWidth/2, p.bLen, p.bWidth);
                 ctx.restore();
             }
-            ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(0,0,p.size,0,7); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(0,0,26,0,7); ctx.fill(); ctx.stroke();
             ctx.restore();
 
-            ctx.restore(); update();
+            ctx.restore();
             requestAnimationFrame(loop);
         }
+
+        init();
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     </script>
 </body>
 </html>
