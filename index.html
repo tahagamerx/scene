@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Tank Game Reborn</title>
+<title>Scenexe Style Game</title>
 <style>
 body{margin:0;background:#000;overflow:hidden;color:#fff;font-family:sans-serif}
 canvas{display:block}
@@ -21,7 +21,7 @@ HP: <span id="hp">100</span>
 
 <script>
 const c=document.getElementById("c");
-const x=c.getContext("2d");
+const ctx=c.getContext("2d");
 
 let W=innerWidth,H=innerHeight;
 c.width=W;c.height=H;
@@ -29,10 +29,10 @@ c.width=W;c.height=H;
 let keys={},bullets=[],shapes=[],bots=[],portals=[];
 
 let p={
-x:0,y:0,vx:0,vy:0,a:0,
-hp:100,max:100,
-lvl:1,xp:0,next:100,score:0,
-reload:0,type:"basic"
+ x:0,y:0,vx:0,vy:0,a:0,
+ hp:100,maxHP:100,
+ lvl:1,xp:0,next:100,score:0,
+ reload:0
 };
 
 // controls
@@ -43,105 +43,116 @@ onmousedown=()=>p.shoot=1;
 onmouseup=()=>p.shoot=0;
 
 // spawn
-function shape(){
-shapes.push({x:(Math.random()-0.5)*4000,y:(Math.random()-0.5)*4000,hp:50,s:20});
+function spawnShape(){
+ shapes.push({
+  x:(Math.random()-0.5)*4000,
+  y:(Math.random()-0.5)*4000,
+  hp:50,
+  size:20
+ });
 }
-function bot(){
-bots.push({x:(Math.random()-0.5)*3000,y:(Math.random()-0.5)*3000,hp:100,a:0,r:0});
+function spawnBot(){
+ bots.push({
+  x:(Math.random()-0.5)*3000,
+  y:(Math.random()-0.5)*3000,
+  hp:100,
+  a:0,
+  cd:0
+ });
 }
-for(let i=0;i<150;i++)shape();
-for(let i=0;i<5;i++)bot();
-portals.push({x:1000,y:1000});
+
+for(let i=0;i<120;i++)spawnShape();
+for(let i=0;i<6;i++)spawnBot();
+portals.push({x:1500,y:1500});
 
 // update
-function upd(){
+function update(){
 
-// move
-let sp=0.5;
+// movement
+let sp=0.6;
 if(keys["w"])p.vy-=sp;
 if(keys["s"])p.vy+=sp;
 if(keys["a"])p.vx-=sp;
 if(keys["d"])p.vx+=sp;
+
 p.vx*=0.9;p.vy*=0.9;
 p.x+=p.vx;p.y+=p.vy;
 
 // regen
-if(p.hp<p.max)p.hp+=0.05;
+if(p.hp<p.maxHP)p.hp+=0.05;
 
 // shoot
 if(p.shoot && p.reload<=0){
-bullets.push({x:p.x,y:p.y,a:p.a,life:80,own:"p"});
-p.reload=20;
+ bullets.push({x:p.x,y:p.y,a:p.a,life:80,dmg:20,own:"p"});
+ p.reload=20;
 }
 if(p.reload>0)p.reload--;
 
 // bullets
 bullets.forEach((b,i)=>{
-b.x+=Math.cos(b.a)*10;
-b.y+=Math.sin(b.a)*10;
+ b.x+=Math.cos(b.a)*12;
+ b.y+=Math.sin(b.a)*12;
 
-// hit shapes
-shapes.forEach((s,si)=>{
-if(Math.hypot(b.x-s.x,b.y-s.y)<s.s){
-s.hp-=20;
-bullets.splice(i,1);
-if(s.hp<=0){
-p.score+=10;
-p.xp+=20;
-shapes.splice(si,1);
-shape();
-}
-}
-});
+ // hit shapes
+ shapes.forEach((s,si)=>{
+  if(Math.hypot(b.x-s.x,b.y-s.y)<s.size){
+   s.hp-=b.dmg;
+   bullets.splice(i,1);
+   if(s.hp<=0){
+    p.score+=10;
+    p.xp+=20;
+    shapes.splice(si,1);
+    spawnShape();
+   }
+  }
+ });
 
-// hit player
-if(b.own==="bot"){
-if(Math.hypot(b.x-p.x,b.y-p.y)<20){
-p.hp-=5;
-bullets.splice(i,1);
-}
-}
+ // hit player
+ if(b.own==="bot"){
+  if(Math.hypot(b.x-p.x,b.y-p.y)<20){
+   p.hp-=5;
+   bullets.splice(i,1);
+  }
+ }
 
-if(b.life--<0)bullets.splice(i,1);
+ if(b.life--<=0)bullets.splice(i,1);
 });
 
 // level
 if(p.xp>=p.next){
-p.lvl++;
-p.xp=0;
-p.next*=1.3;
-
-// tank upgrade
-if(p.lvl==10)p.type="sniper";
-if(p.lvl==20)p.type="triple";
+ p.lvl++;
+ p.xp=0;
+ p.next*=1.3;
 }
 
-// bots
-bots.forEach(b=>{
-let dx=p.x-b.x,dy=p.y-b.y;
-b.a=Math.atan2(dy,dx);
-b.x+=Math.cos(b.a);
-b.y+=Math.sin(b.a);
+// bots AI
+bots.forEach(bot=>{
+ let dx=p.x-bot.x;
+ let dy=p.y-bot.y;
+ bot.a=Math.atan2(dy,dx);
 
-if(b.r<=0){
-bullets.push({x:b.x,y:b.y,a:b.a,life:80,own:"bot"});
-b.r=60;
-}
-b.r--;
+ bot.x+=Math.cos(bot.a)*1.2;
+ bot.y+=Math.sin(bot.a)*1.2;
+
+ if(bot.cd<=0){
+  bullets.push({x:bot.x,y:bot.y,a:bot.a,life:80,dmg:10,own:"bot"});
+  bot.cd=60;
+ }
+ bot.cd--;
 });
 
 // portal
 portals.forEach(pt=>{
-if(Math.hypot(p.x-pt.x,p.y-pt.y)<80){
-p.x=(Math.random()-0.5)*3000;
-p.y=(Math.random()-0.5)*3000;
-}
+ if(Math.hypot(p.x-pt.x,p.y-pt.y)<80){
+  p.x=(Math.random()-0.5)*3000;
+  p.y=(Math.random()-0.5)*3000;
+ }
 });
 
 // death
 if(p.hp<=0){
-alert("You died");
-location.reload();
+ alert("You Died");
+ location.reload();
 }
 
 // UI
@@ -153,71 +164,73 @@ hp.innerText=Math.floor(p.hp);
 // draw
 function draw(){
 c.width=W;c.height=H;
-x.fillStyle="#000";x.fillRect(0,0,W,H);
+ctx.fillStyle="#000";
+ctx.fillRect(0,0,W,H);
 
-x.save();
-x.translate(W/2,H/2);
-x.translate(-p.x,-p.y);
+ctx.save();
+ctx.translate(W/2,H/2);
+ctx.translate(-p.x,-p.y);
 
 // grid
-x.strokeStyle="#111";
-for(let i=-2000;i<2000;i+=100){
-x.beginPath();x.moveTo(i,-2000);x.lineTo(i,2000);x.stroke();
-x.beginPath();x.moveTo(-2000,i);x.lineTo(2000,i);x.stroke();
+ctx.strokeStyle="#111";
+for(let i=-2000;i<2000;i+=120){
+ ctx.beginPath();ctx.moveTo(i,-2000);ctx.lineTo(i,2000);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-2000,i);ctx.lineTo(2000,i);ctx.stroke();
 }
 
 // shapes
-x.fillStyle="yellow";
+ctx.fillStyle="yellow";
 shapes.forEach(s=>{
-x.beginPath();
-x.arc(s.x,s.y,s.s,0,7);
-x.fill();
+ ctx.beginPath();
+ ctx.arc(s.x,s.y,s.size,0,7);
+ ctx.fill();
 });
 
 // bots
-x.fillStyle="red";
+ctx.fillStyle="red";
 bots.forEach(b=>{
-x.beginPath();
-x.arc(b.x,b.y,20,0,7);
-x.fill();
+ ctx.beginPath();
+ ctx.arc(b.x,b.y,22,0,7);
+ ctx.fill();
 });
 
 // bullets
-x.fillStyle="white";
+ctx.fillStyle="white";
 bullets.forEach(b=>{
-x.beginPath();
-x.arc(b.x,b.y,5,0,7);
-x.fill();
+ ctx.beginPath();
+ ctx.arc(b.x,b.y,5,0,7);
+ ctx.fill();
 });
 
 // player
-x.save();
-x.translate(p.x,p.y);
-x.rotate(p.a);
+ctx.save();
+ctx.translate(p.x,p.y);
+ctx.rotate(p.a);
 
-x.fillStyle="#555";
-x.fillRect(0,-8,40,16);
+ctx.fillStyle="#444";
+ctx.fillRect(0,-8,40,16);
 
-x.beginPath();
-x.arc(0,0,20,0,7);
-x.fillStyle="#0af";
-x.fill();
+ctx.beginPath();
+ctx.arc(0,0,20,0,7);
+ctx.fillStyle="#00adef";
+ctx.fill();
 
-x.restore();
+ctx.restore();
 
-x.restore();
+ctx.restore();
 }
 
 // loop
 function loop(){
-upd();
+update();
 draw();
 requestAnimationFrame(loop);
 }
 loop();
 
 onresize=()=>{
-W=innerWidth;H=innerHeight;
+W=innerWidth;
+H=innerHeight;
 };
 </script>
 
